@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'/home/malcolm/parsl/wqparsl/parsl')
 import argparse
 import time
 
@@ -137,7 +139,7 @@ if __name__ == '__main__':
     parsl.load(config)
     # x = test_simple(int(args.count))
     # x = test_imports()
-    x = test_parallel_for(int(args.count), float(args.sleep))
+    x = test_parallel_for(int(100), float(0))
     # x = test_platform(int(args.count), int(args.sleep))
     # x = test_parallel_for(int(args.count))
     # x = test_stdout()

@@ -106,8 +106,12 @@ def WorkQueueSubmitThread(task_queue=multiprocessing.Queue(),
             input_files = item["input_files"]
             output_files = item["output_files"]
 
-            full_script_name = workqueue_worker.__file__
-            script_name = full_script_name.split("/")[-1]
+            #full_script_name = workqueue_worker.__file__
+            #script_name = full_script_name.split("/")[-1]
+
+            workqueue_worker_file = workqueue_worker.__file__
+            full_script_name = workqueue_worker_file[:workqueue_worker_file.rfind("/")] + "/workqueue_cworker"
+            script_name = "workqueue_cworker"
 
             remapping_string = ""
 
@@ -214,7 +218,8 @@ def WorkQueueSubmitThread(task_queue=multiprocessing.Queue(),
                     result_loc = os.path.join(data_dir, "task_" + str(parsl_tid) + "_function_result")
                     logger.debug("Looking for result in {}".format(result_loc))
                     f = open(result_loc, "rb")
-                    result = pickle.load(f)
+                    # result = pickle.load(f)
+                    result = {"failure": False, "result": [f.read()]}
                     f.close()
                     msg = {"tid": parsl_tid,
                            "result_recieved": True,
@@ -339,7 +344,8 @@ class WorkQueueExecutor(ParslExecutor):
                 logger.debug("Password File does not exist, no file used")
                 self.project_password_file = None
 
-        self.launch_cmd = ("python3 workqueue_worker.py -i {input_file} -o {output_file} {remapping_string}")
+        # self.launch_cmd = ("python3 workqueue_worker.py -i {input_file} -o {output_file} {remapping_string}")
+        self.launch_cmd = ("./workqueue_cworker -i {input_file} -o {output_file} {remapping_string}")
         if self.shared_fs is True:
             self.launch_cmd += " --shared-fs"
         if self.init_command != "":
@@ -385,6 +391,21 @@ class WorkQueueExecutor(ParslExecutor):
                                                  name="wait_thread",
                                                  kwargs=collector_thread_kwargs)
         self.collector_thread.daemon = True
+
+        for i in range(self.number_of_servers):
+            standaloneserver_kwargs = {"data_dir": self.function_data_dir,
+                                       "server_id": i}
+            self.standaloneservers.append(threading.Thread(target=standaloneserver.StandAloneServer,
+                                                           name="standalone_server",
+                                                           kwargs=standaloneserver_kwargs))
+            self.standaloneservers[i].daemon = True
+            self.standaloneservers[i].start()
+
+        self.standalonebroker = threading.Thread(target=standaloneserver.StandAloneBroker,
+                                                 name='standalone_broker')
+        self.standalonebroker.daemon = True
+
+        self.standalonebroker.start()
 
         self.submit_process.start()
         self.collector_thread.start()
