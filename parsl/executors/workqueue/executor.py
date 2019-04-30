@@ -16,6 +16,7 @@ from parsl.executors.errors import ExecutorError
 from parsl.executors.base import ParslExecutor
 from parsl.data_provider.files import File
 from parsl.executors.workqueue import workqueue_worker
+from parsl.executors.workqueue import standaloneserver
 
 WORK_QUEUE_DEFAULT_PORT = -1
 
@@ -310,6 +311,7 @@ class WorkQueueExecutor(ParslExecutor):
                  project_password_file=None,
                  port=WORK_QUEUE_DEFAULT_PORT,
                  env=None,
+                 number_of_servers=4,
                  shared_fs=False,
                  init_command="",
                  see_worker_output=False):
@@ -335,6 +337,7 @@ class WorkQueueExecutor(ParslExecutor):
         self.worker_output = see_worker_output
         self.full = True
         self.cancel_value = multiprocessing.Value('i', 1)
+        self.number_of_servers=number_of_servers
 
         if self.project_password is not None and self.project_password_file is not None:
             logger.debug("Password File and Password text specified for WorkQueue Executor, only Password Text will be used")
@@ -391,6 +394,8 @@ class WorkQueueExecutor(ParslExecutor):
                                                  name="wait_thread",
                                                  kwargs=collector_thread_kwargs)
         self.collector_thread.daemon = True
+
+        self.standaloneservers=[]
 
         for i in range(self.number_of_servers):
             standaloneserver_kwargs = {"data_dir": self.function_data_dir,

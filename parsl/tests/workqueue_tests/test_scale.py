@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'/home/malcolm/parsl/wqparsl/parsl')
+sys.path.insert(0,'/home/malcolm/parsl/myparsl/parsl')
 import argparse
 import time
 
