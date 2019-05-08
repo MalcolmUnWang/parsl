@@ -221,7 +221,6 @@ def WorkQueueSubmitThread(task_queue=multiprocessing.Queue(),
                     f = open(result_loc, "rb")
                     # result = pickle.load(f)
                     result = {"failure": False, "result": [f.read()]}
-                    result = {"failure": False, "result": serialize_object(20)}
                     f.close()
                     msg = {"tid": parsl_tid,
                            "result_recieved": True,

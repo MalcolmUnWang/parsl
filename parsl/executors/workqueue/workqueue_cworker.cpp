@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
         }
         index++;
     }
-    /*
+
     std::cout<<"Output";
 
     zmq::context_t context(1);
@@ -39,9 +39,9 @@ int main(int argc, char *argv[]){
 
     zmq::message_t result;
     requester.recv(&result);
-*/
+
     std::fstream outputfile = std::fstream(output_function_file, std::ios::out | std::ios::binary);
-    outputfile.write("1",1);
+    outputfile.write(static_cast<char*>(result.data()),result.size());
 
     return 0;
 
