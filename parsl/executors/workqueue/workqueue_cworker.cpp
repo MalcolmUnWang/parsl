@@ -1,37 +1,55 @@
-#include<zmq.hpp>
-#include<cstring>
-#include<iostream>
-#include<fstream>
+#include<zmq.h>
+#include<string.h>
+#include<stdio.h>
 
 
 int main(int argc, char *argv[]){
-    std::cout<<"Output";
+
+    printf("Output");
     int index = 1;
     char * input_function_file;
     char * output_function_file;
     while(index<argc){
-        if(std::strcmp(argv[index],"-i") == 0){
+        if(strcmp(argv[index],"-i") == 0){
             input_function_file = argv[index + 1];
             index += 1;
         }
-        else if(std::strcmp(argv[index],"-o") == 0){
+        else if(strcmp(argv[index],"-o") == 0){
             output_function_file = argv[index + 1];
             index += 1;
         }
         else{
-            std::cout<<"Command is not supported" << index<<std::endl;
+            printf("Command is not supported %d\n",index);
             return 2;
         }
         index++;
     }
 
-    std::cout<<"Output";
 
-    zmq::context_t context(1);
+    void *context = zmq_ctx_new ();
 
-    zmq::socket_t requester(context, ZMQ_REQ);
-    requester.connect("tcp://localhost:5556");
+    void * requester = zmq_socket(context, ZMQ_REQ);
+    int rc = zmq_connect(requester, "tcp://localhost:5556");
 
+    zmq_send (requester, input_function_file, strlen(input_function_file), 0);
+
+    char buffer[1000];
+
+    printf("Output");
+
+    zmq_recv (requester, buffer, 1000, 0);
+
+    FILE *fp;
+    fp = fopen(output_function_file, "wb");
+
+    fprintf(fp,"%s" ,buffer);
+
+    fclose(fp);
+    zmq_close (requester);
+    zmq_ctx_destroy (context);
+    return 0;
+
+    /*
     zmq::message_t request(std::strlen(input_function_file));
     memcpy(request.data(), input_function_file, std::strlen(input_function_file));
 
@@ -44,5 +62,6 @@ int main(int argc, char *argv[]){
     outputfile.write(static_cast<char*>(result.data()),result.size());
 
     return 0;
+    */
 
 }
